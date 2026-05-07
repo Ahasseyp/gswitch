@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || { echo "Not in a git repo."; exit 1; }
+repo_id=$(printf '%s' "$repo_root" | shasum | cut -d' ' -f1)
+TRACKED_FILE="${HOME}/.local/share/gswitch/${repo_id}/branches"
+
+branch="${1:-$(git branch --show-current)}"
+
+if [[ -z "$branch" ]]; then
+  echo "Not on a branch and no branch name provided."
+  exit 1
+fi
+
+if [[ ! -f "$TRACKED_FILE" ]] || ! grep -qxF "$branch" "$TRACKED_FILE"; then
+  echo "Branch '$branch' is not tracked."
+  exit 1
+fi
+
+grep -vxF "$branch" "$TRACKED_FILE" > "${TRACKED_FILE}.tmp"
+mv "${TRACKED_FILE}.tmp" "$TRACKED_FILE"
+echo "Untracked '$branch'."

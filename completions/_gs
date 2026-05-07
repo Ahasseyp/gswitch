@@ -1,0 +1,13 @@
+#compdef gs
+
+_gs() {
+  local repo_root repo_id tracked_file
+  repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || return
+  repo_id=$(printf '%s' "$repo_root" | shasum | cut -d' ' -f1)
+  tracked_file="${HOME}/.local/share/gswitch/${repo_id}/branches"
+  [[ -f "$tracked_file" ]] || return
+  local branches=(${(f)"$(grep -v '^$' "$tracked_file")"})
+  compadd -M 'l:|=* r:|=*' -- "${branches[@]}"
+}
+
+_gs "$@"

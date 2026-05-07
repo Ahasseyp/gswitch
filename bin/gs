@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || { echo "Not in a git repo."; exit 1; }
+repo_id=$(printf '%s' "$repo_root" | shasum | cut -d' ' -f1)
+TRACKED_FILE="${HOME}/.local/share/gswitch/${repo_id}/branches"
+
+current_branch=$(git branch --show-current 2>/dev/null || true)
+
+list_entries() {
+  [[ ! -f "$TRACKED_FILE" ]] && return 0
+  grep -vxF "$current_branch" "$TRACKED_FILE" 2>/dev/null | grep -v '^$' | sed 's/^/  /' || true
+}
+
+if [[ -z "$(list_entries)" ]]; then
+  echo "No branches to show."
+  exit 0
+fi
+
+# TRACKED_FILE and current_branch are expanded now (script time) into the bind string.
+# $NF and the grep/sed vars expand later inside fzf's execute/reload subshells.
+selected=$(list_entries | fzf --ansi \
+  --header "Switch to branch · ctrl-x: untrack" \
+  --reverse \
+  --query "${1:-}" \
+  --select-1 \
+  --bind "ctrl-x:execute-silent(
+    branch=\$(echo {} | awk '{print \$NF}')
+    grep -vxF \"\$branch\" '$TRACKED_FILE' > '${TRACKED_FILE}.tmp' && mv '${TRACKED_FILE}.tmp' '$TRACKED_FILE'
+  )+reload(
+    grep -vxF '$current_branch' '$TRACKED_FILE' 2>/dev/null | grep -v '^$' | sed 's/^/  /' || true
+  )") || exit 0
+
+[[ -z "$selected" ]] && exit 0
+branch=$(echo "$selected" | awk '{print $NF}')
+
+if [[ -n "$(git status --porcelain)" ]]; then
+  read -rp "Working tree is dirty. Run gwip before switching? [Y/n] " answer
+  if [[ -z "$answer" || "$answer" =~ ^[Yy]$ ]]; then
+    git add -A
+    git rm "$(git ls-files --deleted)" 2>/dev/null || true
+    git commit --no-verify --no-gpg-sign --message "--wip-- [skip ci]"
+  else
+    echo "Aborted."
+    exit 1
+  fi
+fi
+
+git switch "$branch"
+
+if git rev-list --max-count=1 --format="%s" HEAD | grep -q "\-\-wip\-\-"; then
+  git reset HEAD~1
+  echo "Unwipped."
+fi

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_URL="https://github.com/alberthassey/gswitch"
+REPO_URL="https://github.com/Ahasseyp/gswitch"
 BIN_DIR="${HOME}/.local/bin"
 DATA_DIR="${HOME}/.local/share/gswitch"
 

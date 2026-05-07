@@ -16,20 +16,22 @@ Git repos accumulate branches. `git branch` lists everything. `gswitch` only sho
 
 ## Requirements
 
-- `git`
+- [`git`](https://git-scm.com)
 - [`fzf`](https://github.com/junegunn/fzf)
-- zsh
+- [`bash`](https://www.gnu.org/software/bash/) (macOS built-in is fine)
+
+Tab completion requires zsh.
 
 ## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/alberthassey/gswitch/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Ahasseyp/gswitch/main/install.sh | bash
 ```
 
 Or clone and run locally:
 
 ```bash
-git clone https://github.com/alberthassey/gswitch.git
+git clone https://github.com/Ahasseyp/gswitch.git
 cd gswitch
 ./install.sh
 exec zsh

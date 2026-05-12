@@ -58,13 +58,21 @@ Inside the `gs` picker:
 
 ## WIP flow
 
-When switching away from a branch with uncommitted changes, `gs` prompts you to create a WIP commit:
+When switching away from a branch with uncommitted changes, `gs` prompts you with three options:
 
 ```
-Working tree is dirty. Run gwip before switching? [Y/n]
+Working tree is dirty.
+  [g] gwip then switch (default)
+  [s] switch anyway (might fail)
+  [a] abort
+Choice [g]:
 ```
 
-Answering `Y` stages all changes and commits them as `--wip-- [skip ci]`. When you switch back to that branch, `gs` automatically detects the WIP commit and resets it, restoring your working tree exactly as you left it.
+- **g** (or Enter) — stages all changes and commits them as `--wip-- [skip ci]`, then switches
+- **s** — switches immediately without stashing; git will carry over non-conflicting changes or abort if there are conflicts
+- **a** — cancels the switch
+
+When you switch back to a branch that has a WIP commit, `gs` automatically detects it and resets it, restoring your working tree exactly as you left it.
 
 This integrates with the `gwip` / `gunwip` aliases from [oh-my-zsh's git plugin](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/git).
 

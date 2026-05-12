@@ -1,6 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  echo "Usage: gs [<query>]"
+  echo ""
+  echo "Fuzzy-switch to a tracked branch. Optionally pre-filter with <query>."
+  echo ""
+  echo "Keys:"
+  echo "  Enter     switch to selected branch"
+  echo "  ctrl-x    untrack selected branch"
+  echo "  ctrl-c    cancel"
+  exit 0
+fi
+
 repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || { echo "Not in a git repo."; exit 1; }
 repo_id=$(printf '%s' "$repo_root" | shasum | cut -d' ' -f1)
 TRACKED_FILE="${HOME}/.local/share/gswitch/${repo_id}/branches"

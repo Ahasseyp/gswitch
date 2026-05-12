@@ -9,15 +9,15 @@ red()   { printf '\033[31m%s\033[0m\n' "$*"; }
 green() { printf '\033[32m%s\033[0m\n' "$*"; }
 bold()  { printf '\033[1m%s\033[0m\n' "$*"; }
 
-if [[ "${BASH_SOURCE[0]}" == "${0}" && ! -f "$(dirname "$0")/bin/gs" ]]; then
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+
+if [[ ! -f "${SCRIPT_DIR}/bin/gs" ]]; then
   echo "Downloading gswitch..."
   tmp=$(mktemp -d)
   trap 'rm -rf "$tmp"' EXIT
   curl -fsSL "${REPO_URL}/archive/refs/heads/main.tar.gz" | tar -xz -C "$tmp" --strip-components=1
-  cd "$tmp"
+  SCRIPT_DIR="$tmp"
 fi
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo ""
 bold "Installing gswitch"

@@ -35,11 +35,18 @@ selected=$(list_entries | fzf --ansi \
 branch=$(echo "$selected" | awk '{print $NF}')
 
 if [[ -n "$(git status --porcelain)" ]]; then
-  read -rp "Working tree is dirty. Run gwip before switching? [Y/n] " answer
-  if [[ -z "$answer" || "$answer" =~ ^[Yy]$ ]]; then
+  echo "Working tree is dirty."
+  echo "  [g] gwip then switch (default)"
+  echo "  [s] switch anyway (might fail)"
+  echo "  [a] abort"
+  read -rp "Choice [g]: " answer
+
+  if [[ -z "$answer" || "$answer" =~ ^[Gg]$ ]]; then
     git add -A
     git rm "$(git ls-files --deleted)" 2>/dev/null || true
     git commit --no-verify --no-gpg-sign --message "--wip-- [skip ci]"
+  elif [[ "$answer" =~ ^[Ss]$ ]]; then
+    : # proceed to git switch as-is
   else
     echo "Aborted."
     exit 1

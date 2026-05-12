@@ -34,33 +34,28 @@ done
 # Ensure data dir exists
 mkdir -p "$DATA_DIR"
 
-# Install zsh completion
-COMPLETION_INSTALLED=false
+ZSHRC="${ZDOTDIR:-${HOME}}/.zshrc"
 
-if [[ -n "${ZSH:-}" && -d "${ZSH_CUSTOM:-${ZSH}/custom}/completions" ]]; then
+# Install zsh completion (oh-my-zsh only)
+if [[ -n "${ZSH:-}" ]]; then
   COMP_DIR="${ZSH_CUSTOM:-${ZSH}/custom}/completions"
   mkdir -p "$COMP_DIR"
   cp "${SCRIPT_DIR}/completions/_gs" "${COMP_DIR}/_gs"
   echo "  installed ${COMP_DIR}/_gs"
-  COMPLETION_INSTALLED=true
 else
-  # Try first writable fpath dir
-  while IFS= read -r dir; do
-    [[ -z "$dir" ]] && continue
-    if [[ -w "$dir" ]]; then
-      cp "${SCRIPT_DIR}/completions/_gs" "${dir}/_gs"
-      echo "  installed ${dir}/_gs"
-      COMPLETION_INSTALLED=true
-      break
-    fi
-  done < <(zsh -c 'printf "%s\n" "${fpath[@]}"' 2>/dev/null || true)
+  echo ""
+  red "oh-my-zsh not detected — tab completion not installed."
+  echo "Install oh-my-zsh at https://ohmyz.sh and re-run to enable it."
 fi
 
-if [[ "$COMPLETION_INSTALLED" == "false" ]]; then
-  echo ""
-  red "Could not auto-install zsh completion."
-  echo "Manually copy completions/_gs to a directory on your fpath, then run:"
-  echo "  rm -f ~/.zcompdump && exec zsh"
+# Enable oh-my-zsh git plugin (provides gwip/gunwip)
+if [[ -n "${ZSH:-}" ]]; then
+  if awk '/^plugins=\(/{b=1} b && /\bgit\b/{f=1} b && /^\)/{exit} END{exit !f}' "$ZSHRC" 2>/dev/null; then
+    echo "  oh-my-zsh git plugin already enabled"
+  else
+    awk '/^plugins=\(/{print; print "  git"; next} 1' "$ZSHRC" > "${ZSHRC}.tmp" && mv "${ZSHRC}.tmp" "$ZSHRC"
+    echo "  enabled oh-my-zsh git plugin in ${ZSHRC}"
+  fi
 fi
 
 # Warn if BIN_DIR is not on PATH

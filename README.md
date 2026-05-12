@@ -4,9 +4,9 @@ Bookmark branches you're actively working on and switch between them instantly w
 
 ```
 $ gs
-  feat/PARA-123/new-dashboard
-  feat/PARA-456/api-refactor
-> fix/PARA-789/login-bug
+  feat/my-new-feature
+  feat/api-refactor
+> fix/login-bug
   Switch to branch · ctrl-x: untrack
 ```
 
@@ -78,7 +78,7 @@ This integrates with the `gwip` / `gunwip` aliases from [oh-my-zsh's git plugin]
 
 ## Tab completion (zsh)
 
-`gs <tab>` completes from your tracked branches for the current repo. Substring matching is enabled, so `gs para<tab>` matches `feat/PARA-123/anything`.
+`gs <tab>` completes from your tracked branches for the current repo. Substring matching is enabled, so `gs login<tab>` matches `fix/login-bug`.
 
 ## Data storage
 

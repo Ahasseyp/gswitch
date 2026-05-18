@@ -5,6 +5,13 @@ _gs() {
   repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || return
   repo_id=$(printf '%s' "$repo_root" | shasum | cut -d' ' -f1)
   tracked_file="${HOME}/.local/share/gswitch/${repo_id}/branches"
+
+  local flags=(
+    '--last:switch to the previously visited branch'
+    '-:switch to the previously visited branch'
+  )
+  _describe -t flags 'flags' flags
+
   [[ -f "$tracked_file" ]] || return
   local branches=(${(f)"$(grep -v '^$' "$tracked_file")"})
   compadd -M 'l:|=* r:|=*' -- "${branches[@]}"

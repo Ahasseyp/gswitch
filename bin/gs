@@ -3,8 +3,13 @@ set -euo pipefail
 
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   echo "Usage: gs [<query>]"
+  echo "       gs --last"
+  echo "       gs -"
   echo ""
   echo "Fuzzy-switch to a tracked branch. Optionally pre-filter with <query>."
+  echo ""
+  echo "Flags:"
+  echo "  --last, -   switch to the previously visited branch"
   echo ""
   echo "Keys:"
   echo "  Enter     switch to selected branch"
@@ -16,35 +21,42 @@ fi
 repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || { echo "Not in a git repo."; exit 1; }
 repo_id=$(printf '%s' "$repo_root" | shasum | cut -d' ' -f1)
 TRACKED_FILE="${HOME}/.local/share/gswitch/${repo_id}/branches"
+LAST_FILE="${HOME}/.local/share/gswitch/${repo_id}/last_branch"
 
 current_branch=$(git branch --show-current 2>/dev/null || true)
 
-list_entries() {
-  [[ ! -f "$TRACKED_FILE" ]] && return 0
-  grep -vxF "$current_branch" "$TRACKED_FILE" 2>/dev/null | grep -v '^$' | sed 's/^/  /' || true
-}
+if [[ "${1:-}" == "--last" || "${1:-}" == "-" ]]; then
+  [[ -f "$LAST_FILE" ]] || { echo "No previous branch recorded."; exit 1; }
+  branch=$(cat "$LAST_FILE")
+  [[ -n "$branch" ]] || { echo "No previous branch recorded."; exit 1; }
+else
+  list_entries() {
+    [[ ! -f "$TRACKED_FILE" ]] && return 0
+    grep -vxF "$current_branch" "$TRACKED_FILE" 2>/dev/null | grep -v '^$' | sed 's/^/  /' || true
+  }
 
-if [[ -z "$(list_entries)" ]]; then
-  echo "No branches to show."
-  exit 0
+  if [[ -z "$(list_entries)" ]]; then
+    echo "No branches to show."
+    exit 0
+  fi
+
+  # TRACKED_FILE and current_branch are expanded now (script time) into the bind string.
+  # $NF and the grep/sed vars expand later inside fzf's execute/reload subshells.
+  selected=$(list_entries | fzf --ansi \
+    --header "Switch to branch · ctrl-x: untrack" \
+    --reverse \
+    --query "${1:-}" \
+    --select-1 \
+    --bind "ctrl-x:execute-silent(
+      branch=\$(echo {} | awk '{print \$NF}')
+      grep -vxF \"\$branch\" '$TRACKED_FILE' > '${TRACKED_FILE}.tmp' && mv '${TRACKED_FILE}.tmp' '$TRACKED_FILE'
+    )+reload(
+      grep -vxF '$current_branch' '$TRACKED_FILE' 2>/dev/null | grep -v '^$' | sed 's/^/  /' || true
+    )") || exit 0
+
+  [[ -z "$selected" ]] && exit 0
+  branch=$(echo "$selected" | awk '{print $NF}')
 fi
-
-# TRACKED_FILE and current_branch are expanded now (script time) into the bind string.
-# $NF and the grep/sed vars expand later inside fzf's execute/reload subshells.
-selected=$(list_entries | fzf --ansi \
-  --header "Switch to branch · ctrl-x: untrack" \
-  --reverse \
-  --query "${1:-}" \
-  --select-1 \
-  --bind "ctrl-x:execute-silent(
-    branch=\$(echo {} | awk '{print \$NF}')
-    grep -vxF \"\$branch\" '$TRACKED_FILE' > '${TRACKED_FILE}.tmp' && mv '${TRACKED_FILE}.tmp' '$TRACKED_FILE'
-  )+reload(
-    grep -vxF '$current_branch' '$TRACKED_FILE' 2>/dev/null | grep -v '^$' | sed 's/^/  /' || true
-  )") || exit 0
-
-[[ -z "$selected" ]] && exit 0
-branch=$(echo "$selected" | awk '{print $NF}')
 
 if [[ -n "$(git status --porcelain)" ]]; then
   echo "Working tree is dirty."
@@ -65,6 +77,7 @@ if [[ -n "$(git status --porcelain)" ]]; then
   fi
 fi
 
+echo "$current_branch" > "$LAST_FILE"
 git switch "$branch"
 
 if git rev-list --max-count=1 --format="%s" HEAD | grep -q "\-\-wip\-\-"; then

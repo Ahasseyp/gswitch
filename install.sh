@@ -25,7 +25,7 @@ echo ""
 
 # Install binaries
 mkdir -p "$BIN_DIR"
-for cmd in gs gsadd gsrm; do
+for cmd in gs gsadd gsrm gsupdate; do
   cp "${SCRIPT_DIR}/bin/${cmd}" "${BIN_DIR}/${cmd}"
   chmod +x "${BIN_DIR}/${cmd}"
   echo "  installed ${BIN_DIR}/${cmd}"
@@ -33,6 +33,11 @@ done
 
 # Ensure data dir exists
 mkdir -p "$DATA_DIR"
+
+# Record installed version
+if [[ -f "${SCRIPT_DIR}/VERSION" ]]; then
+  cp "${SCRIPT_DIR}/VERSION" "${DATA_DIR}/version"
+fi
 
 ZSHRC="${ZDOTDIR:-${HOME}}/.zshrc"
 
@@ -73,3 +78,4 @@ bold "Commands:"
 echo "  gs          — fuzzy-switch to a tracked branch"
 echo "  gsadd       — start tracking the current branch"
 echo "  gsrm        — stop tracking the current branch"
+echo "  gsupdate    — update gswitch to the latest version"

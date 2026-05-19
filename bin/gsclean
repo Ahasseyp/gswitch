@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  echo "Usage: gsclean"
+  echo ""
+  echo "Remove tracked branches that no longer exist locally."
+  exit 0
+fi
+
+repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || { echo "Not in a git repo."; exit 1; }
+repo_id=$(printf '%s' "$repo_root" | shasum | cut -d' ' -f1)
+TRACKED_FILE="${HOME}/.local/share/gswitch/${repo_id}/branches"
+
+if [[ ! -f "$TRACKED_FILE" ]]; then
+  echo "Nothing to prune."
+  exit 0
+fi
+
+removed=0
+tmp=$(mktemp)
+
+while IFS= read -r b; do
+  [[ -z "$b" ]] && continue
+  if git show-ref --verify --quiet "refs/heads/$b"; then
+    echo "$b"
+  else
+    echo "Removed '$b' (branch no longer exists)."
+    removed=$(( removed + 1 ))
+  fi
+done < "$TRACKED_FILE" > "$tmp"
+
+mv "$tmp" "$TRACKED_FILE"
+
+if (( removed == 0 )); then
+  echo "Nothing to prune."
+fi

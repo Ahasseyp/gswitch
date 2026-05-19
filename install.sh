@@ -15,7 +15,15 @@ if [[ ! -f "${SCRIPT_DIR}/bin/gs" ]]; then
   echo "Downloading gswitch..."
   tmp=$(mktemp -d)
   trap 'rm -rf "$tmp"' EXIT
-  curl -fsSL "${REPO_URL}/archive/refs/heads/main.tar.gz" | tar -xz -C "$tmp" --strip-components=1
+  latest_tag=$(curl -fsSL --max-time 10 \
+    "https://api.github.com/repos/Ahasseyp/gswitch/releases/latest" 2>/dev/null \
+    | grep '"tag_name"' | head -1 \
+    | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/' || echo "")
+  if [[ -n "$latest_tag" ]]; then
+    curl -fsSL "${REPO_URL}/archive/refs/tags/${latest_tag}.tar.gz" | tar -xz -C "$tmp" --strip-components=1
+  else
+    curl -fsSL "${REPO_URL}/archive/refs/heads/main.tar.gz" | tar -xz -C "$tmp" --strip-components=1
+  fi
   SCRIPT_DIR="$tmp"
 fi
 

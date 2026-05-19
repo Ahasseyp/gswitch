@@ -93,8 +93,9 @@ if (( now - last > 86400 )); then
   echo "$now" > "$CHECK_FILE"
   (
     remote=$(curl -fsSL --max-time 3 \
-      "https://raw.githubusercontent.com/Ahasseyp/gswitch/main/VERSION" 2>/dev/null \
-      | tr -d '[:space:]' || true)
+      "https://api.github.com/repos/Ahasseyp/gswitch/releases/latest" 2>/dev/null \
+      | grep '"tag_name"' | head -1 \
+      | sed 's/.*"tag_name": *"v\{0,1\}\([^"]*\)".*/\1/' || true)
     local_v=$(cat "${HOME}/.local/share/gswitch/version" 2>/dev/null | tr -d '[:space:]' || true)
     [[ -n "$remote" && -n "$local_v" && "$remote" != "$local_v" ]] && \
       echo "gswitch update available ($local_v → $remote). Run: gsupdate"

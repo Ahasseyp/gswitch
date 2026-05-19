@@ -33,7 +33,7 @@ echo ""
 
 # Install binaries
 mkdir -p "$BIN_DIR"
-for cmd in gs gsadd gsrm gsupdate; do
+for cmd in gs gsadd gsrm gsupdate gsclean; do
   cp "${SCRIPT_DIR}/bin/${cmd}" "${BIN_DIR}/${cmd}"
   chmod +x "${BIN_DIR}/${cmd}"
   echo "  installed ${BIN_DIR}/${cmd}"
@@ -86,4 +86,5 @@ bold "Commands:"
 echo "  gs          — fuzzy-switch to a tracked branch"
 echo "  gsadd       — start tracking the current branch"
 echo "  gsrm        — stop tracking the current branch"
+echo "  gsclean     — remove tracked branches that no longer exist locally"
 echo "  gsupdate    — update gswitch to the latest version"

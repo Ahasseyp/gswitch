@@ -47,6 +47,7 @@ exec zsh
 | `gsadd <branch>` | Start tracking a specific branch |
 | `gsrm` | Stop tracking the current branch |
 | `gsrm <branch>` | Stop tracking a specific branch |
+| `gsclean` | Remove tracked branches that no longer exist locally |
 
 Inside the `gs` picker:
 

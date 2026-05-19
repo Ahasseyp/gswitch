@@ -25,6 +25,15 @@ LAST_FILE="${HOME}/.local/share/gswitch/${repo_id}/last_branch"
 
 current_branch=$(git branch --show-current 2>/dev/null || true)
 
+if [[ -f "$TRACKED_FILE" ]]; then
+  tmp=$(mktemp)
+  while IFS= read -r b; do
+    [[ -z "$b" ]] && continue
+    git show-ref --verify --quiet "refs/heads/$b" && echo "$b"
+  done < "$TRACKED_FILE" > "$tmp"
+  mv "$tmp" "$TRACKED_FILE"
+fi
+
 if [[ "${1:-}" == "--last" || "${1:-}" == "-" ]]; then
   [[ -f "$LAST_FILE" ]] || { echo "No previous branch recorded."; exit 1; }
   branch=$(cat "$LAST_FILE")
